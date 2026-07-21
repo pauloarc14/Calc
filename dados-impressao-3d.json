@@ -1,0 +1,27 @@
+{
+  "_como_editar": "Este ficheiro é a tua base de dados de materiais e impressoras. Podes editar os valores ou adicionar novas entradas (copia um bloco existente, muda o nome entre chavetas — ex. 'creality_k1' — e preenche os campos). Depois de guardares e fazeres upload deste ficheiro para o GitHub (com o mesmo nome, ao lado do index.html), a calculadora passa a mostrar essas opções automaticamente nos menus. Não é preciso mexer no site.",
+
+  "materiais": {
+    "PLA":   { "nome": "PLA",            "densidade": 1.24, "custo_kg": 18, "caudal": 15 },
+    "PETG":  { "nome": "PETG",           "densidade": 1.27, "custo_kg": 22, "caudal": 10 },
+    "ABS":   { "nome": "ABS",            "densidade": 1.04, "custo_kg": 19, "caudal": 12 },
+    "ASA":   { "nome": "ASA",            "densidade": 1.05, "custo_kg": 24, "caudal": 11 },
+    "TPU":   { "nome": "TPU (flexível)", "densidade": 1.21, "custo_kg": 28, "caudal": 5  },
+    "NYLON": { "nome": "Nylon",          "densidade": 1.14, "custo_kg": 35, "caudal": 9  }
+  },
+
+  "_legenda_materiais": "nome = texto mostrado na lista · densidade em g/cm³ · custo_kg = €/kg do rolo · caudal = velocidade de extrusão em mm³/s (afeta o tempo de impressão estimado)",
+
+  "impressoras": {
+    "bambu_a1mini": { "nome": "Bambu Lab A1 Mini",     "preco": 219, "potencia": 100, "vida_util_horas": 8000,  "consumiveis_hora": 0.08 },
+    "bambu_a1":     { "nome": "Bambu Lab A1",          "preco": 269, "potencia": 130, "vida_util_horas": 8000,  "consumiveis_hora": 0.08 },
+    "bambu_p1s":    { "nome": "Bambu Lab P1S",         "preco": 579, "potencia": 150, "vida_util_horas": 8000,  "consumiveis_hora": 0.08 },
+    "bambu_x1c":    { "nome": "Bambu Lab X1 Carbon",   "preco": 1500, "potencia": 220, "vida_util_horas": 6000,  "consumiveis_hora": 0.10 },
+    "prusa_mini":   { "nome": "Prusa Mini+",           "preco": 429, "potencia": 90,  "vida_util_horas": 10000, "consumiveis_hora": 0.06 },
+    "prusa_mk4":    { "nome": "Prusa MK4",             "preco": 799, "potencia": 120, "vida_util_horas": 10000, "consumiveis_hora": 0.08 },
+    "ender3v3":     { "nome": "Creality Ender 3 V3",   "preco": 199, "potencia": 150, "vida_util_horas": 6000,  "consumiveis_hora": 0.08 },
+    "ender3":       { "nome": "Creality Ender 3",      "preco": 169, "potencia": 150, "vida_util_horas": 6000,  "consumiveis_hora": 0.08 }
+  },
+
+  "_legenda_impressoras": "nome = texto mostrado na lista · preco em € · potencia em W (consumo médio) · vida_util_horas = horas de vida útil estimadas da máquina (usadas para amortizar o preço) · consumiveis_hora = €/hora para bicos, lubrificação, placas, etc."
+}
