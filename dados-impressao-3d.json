@@ -7,7 +7,8 @@
     "ABS":   { "nome": "ABS",            "densidade": 1.04, "custo_kg": 19, "caudal": 12 },
     "ASA":   { "nome": "ASA",            "densidade": 1.05, "custo_kg": 24, "caudal": 11 },
     "TPU":   { "nome": "TPU (flexível)", "densidade": 1.21, "custo_kg": 28, "caudal": 5  },
-    "NYLON": { "nome": "Nylon",          "densidade": 1.14, "custo_kg": 35, "caudal": 9  }
+    "NYLON": { "nome": "Nylon",          "densidade": 1.14, "custo_kg": 35, "caudal": 9  },
+    "ASA RE": { "nome": "ASA RE",          "densidade": 1.14, "custo_kg": 8, "caudal": 9  }
   },
 
   "_legenda_materiais": "nome = texto mostrado na lista · densidade em g/cm³ · custo_kg = €/kg do rolo · caudal = velocidade de extrusão em mm³/s (afeta o tempo de impressão estimado)",
@@ -20,7 +21,8 @@
     "prusa_mini":   { "nome": "Prusa Mini+",           "preco": 429, "potencia": 90,  "vida_util_horas": 10000, "consumiveis_hora": 0.06 },
     "prusa_mk4":    { "nome": "Prusa MK4",             "preco": 799, "potencia": 120, "vida_util_horas": 10000, "consumiveis_hora": 0.08 },
     "ender3v3":     { "nome": "Creality Ender 3 V3",   "preco": 199, "potencia": 150, "vida_util_horas": 6000,  "consumiveis_hora": 0.08 },
-    "ender3":       { "nome": "Creality Ender 3",      "preco": 169, "potencia": 150, "vida_util_horas": 6000,  "consumiveis_hora": 0.08 }
+    "ender3":       { "nome": "Creality Ender 3",      "preco": 169, "potencia": 150, "vida_util_horas": 6000,  "consumiveis_hora": 0.08 },
+    "ender5maz":       { "nome": "Creality Ender 5 MAX",      "preco": 900 , "potencia": 900, "vida_util_horas": 6000,  "consumiveis_hora": 0.10 }
   },
 
   "_legenda_impressoras": "nome = texto mostrado na lista · preco em € · potencia em W (consumo médio) · vida_util_horas = horas de vida útil estimadas da máquina (usadas para amortizar o preço) · consumiveis_hora = €/hora para bicos, lubrificação, placas, etc."
