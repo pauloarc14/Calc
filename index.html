@@ -102,9 +102,14 @@
   /* ---------- GRID ---------- */
   .grid-main{
     display:grid;
-    grid-template-columns: 1.1fr 1fr 1fr;
+    grid-template-columns: 1fr 1.2fr;
     gap:20px;
     align-items:start;
+  }
+  .grid-left, .grid-right{
+    display:flex;
+    flex-direction:column;
+    gap:20px;
   }
   @media (max-width: 980px){ .grid-main{grid-template-columns:1fr;} }
 
@@ -360,6 +365,8 @@
 
   <div class="grid-main">
 
+    <div class="grid-left">
+
     <!-- PREVIEW -->
     <div class="card" id="viewerCard">
       <h2><span class="dot"></span>Modelo</h2>
@@ -378,6 +385,87 @@
         <div class="stat-line"><span>Triângulos</span><span id="statTris">–</span></div>
       </div>
     </div>
+
+    <!-- AMORTIZAÇÃO E MÃO DE OBRA -->
+    <div class="card">
+      <h2><span class="dot"></span>Amortização e mão de obra</h2>
+
+      <div class="row2">
+        <div class="field">
+          <label>Custo da impressora <span class="val">€</span></label>
+          <input type="number" id="printerPrice" value="300" step="10">
+        </div>
+        <div class="field">
+          <label>Vida útil <span class="val">h</span></label>
+          <input type="number" id="printerLifetime" value="8000" step="100">
+        </div>
+      </div>
+      <div class="row2">
+        <div class="field">
+          <label>Consumíveis <span class="val">€/h</span></label>
+          <input type="number" id="consumables" value="0.08" step="0.01">
+        </div>
+        <div class="field">
+          <label>Custo horário do operador <span class="val">€/h</span></label>
+          <input type="number" id="laborRate" value="0" step="0.5">
+        </div>
+      </div>
+      <div class="row2">
+        <div class="field">
+          <label>Preparação <span class="val">min</span></label>
+          <input type="number" id="prepMinutes" value="0" step="1" min="0">
+        </div>
+        <div class="field">
+          <label>Pós-processamento <span class="val">min</span></label>
+          <input type="number" id="postMinutes" value="0" step="1" min="0">
+        </div>
+      </div>
+      <div class="row2">
+        <div class="field">
+          <label>Embalagem <span class="val">€</span></label>
+          <input type="number" id="packagingCost" value="0" step="0.5">
+        </div>
+        <div class="field">
+          <label>Envio <span class="val">€</span></label>
+          <input type="number" id="shippingCost" value="0" step="0.5">
+        </div>
+      </div>
+    </div>
+
+    <!-- COMPONENTES E CONSUMÍVEIS -->
+    <div class="card">
+      <h2><span class="dot"></span>Componentes e consumíveis</h2>
+
+      <div class="components-table" id="componentsTable">
+        <div class="components-head">
+          <span>Nome</span><span>Preço, €</span><span>Qtd.</span><span></span>
+        </div>
+        <div id="componentsRows"></div>
+        <button type="button" class="btn-ghost" id="addComponentBtn" style="width:100%;">+ Adicionar item</button>
+      </div>
+      <p class="manual-hint">Parafusos, inserções, rolamentos, molas, etc.</p>
+    </div>
+
+    <!-- SERVIÇOS ADICIONAIS -->
+    <div class="card">
+      <h2><span class="dot"></span>Serviços adicionais</h2>
+
+      <div class="row2">
+        <div class="field">
+          <label>Custo de desenho 3D <span class="val">€</span></label>
+          <input type="number" id="designCost" value="0" step="1">
+        </div>
+        <div class="field">
+          <label>Custo de scan 3D <span class="val">€</span></label>
+          <input type="number" id="scanCost" value="0" step="1">
+        </div>
+      </div>
+      <p class="manual-hint" style="margin-bottom:0">Estes dois valores não entram no preço da peça — aparecem como itens separados no PDF do orçamento.</p>
+    </div>
+
+    </div>
+
+    <div class="grid-right">
 
     <!-- PRINT SETTINGS -->
     <div class="card">
@@ -455,82 +543,13 @@
       </div>
 
       <div class="divider"></div>
-      <p class="subhead">Componentes e consumíveis</p>
-
-      <div class="components-table" id="componentsTable">
-        <div class="components-head">
-          <span>Nome</span><span>Preço, €</span><span>Qtd.</span><span></span>
-        </div>
-        <div id="componentsRows"></div>
-        <button type="button" class="btn-ghost" id="addComponentBtn" style="width:100%;">+ Adicionar item</button>
-      </div>
-      <p class="manual-hint">Parafusos, inserções, rolamentos, molas, etc.</p>
-
-      <div class="divider"></div>
-      <p class="subhead">Amortização e mão de obra</p>
-
-      <div class="row2">
-        <div class="field">
-          <label>Custo da impressora <span class="val">€</span></label>
-          <input type="number" id="printerPrice" value="300" step="10">
-        </div>
-        <div class="field">
-          <label>Vida útil <span class="val">h</span></label>
-          <input type="number" id="printerLifetime" value="8000" step="100">
-        </div>
-      </div>
-      <div class="row2">
-        <div class="field">
-          <label>Consumíveis <span class="val">€/h</span></label>
-          <input type="number" id="consumables" value="0.08" step="0.01">
-        </div>
-        <div class="field">
-          <label>Custo horário do operador <span class="val">€/h</span></label>
-          <input type="number" id="laborRate" value="0" step="0.5">
-        </div>
-      </div>
-      <div class="row2">
-        <div class="field">
-          <label>Preparação <span class="val">min</span></label>
-          <input type="number" id="prepMinutes" value="0" step="1" min="0">
-        </div>
-        <div class="field">
-          <label>Pós-processamento <span class="val">min</span></label>
-          <input type="number" id="postMinutes" value="0" step="1" min="0">
-        </div>
-      </div>
-      <div class="row2">
-        <div class="field">
-          <label>Embalagem <span class="val">€</span></label>
-          <input type="number" id="packagingCost" value="0" step="0.5">
-        </div>
-        <div class="field">
-          <label>Envio <span class="val">€</span></label>
-          <input type="number" id="shippingCost" value="0" step="0.5">
-        </div>
-      </div>
-
-      <div class="divider"></div>
-      <p class="subhead">Serviços adicionais</p>
-
-      <div class="row2">
-        <div class="field">
-          <label>Custo de desenho 3D <span class="val">€</span></label>
-          <input type="number" id="designCost" value="0" step="1">
-        </div>
-        <div class="field">
-          <label>Custo de scan 3D <span class="val">€</span></label>
-          <input type="number" id="scanCost" value="0" step="1">
-        </div>
-      </div>
-      <p class="manual-hint">Estes dois valores não entram no preço da peça — aparecem como itens separados no PDF do orçamento.</p>
-
-      <div class="divider"></div>
 
       <div class="field" style="margin-bottom:0">
         <label>Margem de lucro <span class="val" id="marginVal">30%</span></label>
         <input type="range" id="margin" min="0" max="200" value="30" step="5">
       </div>
+    </div>
+
     </div>
   </div>
 
@@ -936,7 +955,6 @@ function applyModeUI(){
 
   dropzone.style.display = manual ? 'none' : '';
   $('viewerCard').style.display = manual ? 'none' : '';
-  document.querySelector('.grid-main').style.gridTemplateColumns = manual ? '1fr 1fr' : '';
 
   $('manualWeightField').style.display = manual ? 'block' : 'none';
 
@@ -1141,12 +1159,17 @@ function recalc(){
   const kwhCost = parseFloat(electricityInput.value);
   const electricityCost = (powerW/1000) * timeH * kwhCost;
 
-  // custo de desenho e de scan 3D NÃO entram no preço da peça — são itens à parte no orçamento
-  const subtotal = materialCost + machineCost + consumablesPrinterCost + componentsCost
-                  + laborCost + packagingCost + shippingCost + electricityCost;
+  // --- separar custos que levam margem dos que passam "ao custo" ---
+  // Com margem: material, amortização da impressora, mão de obra
+  // Sem margem (só o custo, sem lucro): consumíveis (impressora + componentes), eletricidade, embalagem, envio
+  const markupBase = materialCost + machineCost + laborCost;
+  const passThroughCost = consumablesPrinterCost + componentsCost + electricityCost + packagingCost + shippingCost;
+
+  const subtotal = markupBase + passThroughCost; // custo total, sem lucro
   const margin = parseFloat(marginInput.value) / 100;
-  const profit = subtotal * margin;
+  const profit = markupBase * margin; // lucro incide só sobre markupBase
   const finalPrice = subtotal + profit;
+  // custo de desenho e de scan 3D continuam à parte — nunca entram aqui nem levam margem
 
   lastResult = {
     weightG, timeS, filamentLenM, materialCost, machineCost,
