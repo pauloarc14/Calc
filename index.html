@@ -298,6 +298,30 @@
     display:flex;justify-content:space-between;padding:12px 2px 4px;
     font-weight:600;color:var(--accent);font-size:14.5px;
   }
+
+  .components-table{margin-bottom:6px;}
+  .components-head{
+    display:grid;grid-template-columns:1fr 72px 52px 26px;gap:8px;
+    font-size:10px;color:var(--text-faint);text-transform:uppercase;letter-spacing:.05em;
+    padding:0 2px 6px;
+  }
+  .component-row{
+    display:grid;grid-template-columns:1fr 72px 52px 26px;gap:8px;
+    margin-bottom:7px;align-items:center;
+  }
+  .component-row input{
+    background:var(--panel-2);border:1px solid var(--border);color:var(--text);
+    padding:8px 9px;border-radius:7px;font-size:12.5px;font-family:'Space Grotesk',sans-serif;
+    outline:none;width:100%;
+  }
+  .component-row input:focus{border-color:var(--accent);}
+  .component-row input[type=number]{font-family:'JetBrains Mono',monospace;}
+  .component-remove{
+    background:none;border:1px solid var(--border);color:var(--text-faint);
+    width:26px;height:26px;border-radius:6px;cursor:pointer;font-size:14px;line-height:1;
+    display:flex;align-items:center;justify-content:center;transition:all .15s;
+  }
+  .component-remove:hover{border-color:var(--danger);color:var(--danger);}
 </style>
 </head>
 <body>
@@ -376,58 +400,10 @@
         <input type="number" id="manualWeight" value="0" step="1" min="0">
       </div>
 
-      <div id="geometryFields">
-        <div class="row2">
-          <div class="field">
-            <label>Nº de paredes</label>
-            <div class="stepper">
-              <button type="button" id="wallsMinus">–</button>
-              <input type="number" id="walls" value="2" min="1" max="8" readonly>
-              <button type="button" id="wallsPlus">+</button>
-            </div>
-          </div>
-          <div class="field">
-            <label>Camadas topo/base</label>
-            <div class="stepper">
-              <button type="button" id="tbMinus">–</button>
-              <input type="number" id="topBottom" value="4" min="0" max="10" readonly>
-              <button type="button" id="tbPlus">+</button>
-            </div>
-          </div>
-        </div>
-
-        <div class="field">
-          <label>Preenchimento (infill) <span class="val" id="infillVal">15%</span></label>
-          <input type="range" id="infill" min="0" max="100" value="15" step="1">
-        </div>
-
-        <div class="row2">
-          <div class="field">
-            <label>Altura de camada (mm)</label>
-            <input type="number" id="layerHeight" value="0.20" step="0.02" min="0.05" max="0.4">
-          </div>
-          <div class="field">
-            <label>Bico (mm)</label>
-            <select id="nozzle">
-              <option value="0.2">0.2</option>
-              <option value="0.4" selected>0.4</option>
-              <option value="0.6">0.6</option>
-              <option value="0.8">0.8</option>
-            </select>
-          </div>
-        </div>
-      </div>
-
       <div class="divider"></div>
 
-      <div id="manualTimeToggleRow">
-        <label class="check-row">
-          <input type="checkbox" id="manualTimeToggle">
-          Definir tempo de impressão manualmente
-        </label>
-        <p class="manual-hint">Usa isto se já tens o tempo exato dado pelo teu slicer (ex. Bambu Studio) — os custos passam a ser calculados com esse valor.</p>
-      </div>
-      <div class="row2" id="manualTimeInputs" style="display:none">
+      <p class="manual-hint">Tempo de impressão (ex. o valor exato do teu slicer, como o Bambu Studio):</p>
+      <div class="row2" id="manualTimeInputs">
         <div class="field">
           <label>Horas</label>
           <input type="number" id="manualHours" value="0" min="0">
@@ -435,20 +411,6 @@
         <div class="field">
           <label>Minutos</label>
           <input type="number" id="manualMinutes" value="0" min="0" max="59">
-        </div>
-      </div>
-
-      <div class="divider" id="advancedDivider"></div>
-      <p class="subhead" id="advancedLabel">Avançado</p>
-
-      <div class="row2">
-        <div class="field">
-          <label>Densidade (g/cm³)</label>
-          <input type="number" id="density" value="1.24" step="0.01">
-        </div>
-        <div class="field" id="flowField">
-          <label>Caudal (mm³/s)</label>
-          <input type="number" id="flow" value="15" step="0.5">
         </div>
       </div>
     </div>
@@ -471,11 +433,6 @@
           <option value="ender3">Creality Ender 3</option>
         </select>
       </div>
-
-      <div class="field" id="printerNameField">
-        <label>Nome da tua impressora <span class="val">opcional</span></label>
-        <input type="text" id="printerName" placeholder="ex. A minha Ender 3">
-      </div>
       <p class="manual-hint" id="printerPresetHint" style="display:none">Preço e potência preenchidos automaticamente com valores de referência — ajusta se souberes os valores reais da tua máquina.</p>
 
       <div class="field">
@@ -483,16 +440,78 @@
         <input type="number" id="materialCost" value="18" step="0.5">
       </div>
 
+      <div class="divider"></div>
+      <p class="subhead">Eletricidade</p>
+
       <div class="row2">
         <div class="field">
-          <label>Preço da impressora (€)</label>
+          <label>Potência da impressora <span class="val">W</span></label>
+          <input type="number" id="power" value="150" step="5">
+        </div>
+        <div class="field">
+          <label>Preço da eletricidade <span class="val">€/kWh</span></label>
+          <input type="number" id="electricity" value="0.25" step="0.01">
+        </div>
+      </div>
+
+      <div class="divider"></div>
+      <p class="subhead">Componentes e consumíveis</p>
+
+      <div class="components-table" id="componentsTable">
+        <div class="components-head">
+          <span>Nome</span><span>Preço, €</span><span>Qtd.</span><span></span>
+        </div>
+        <div id="componentsRows"></div>
+        <button type="button" class="btn-ghost" id="addComponentBtn" style="width:100%;">+ Adicionar item</button>
+      </div>
+      <p class="manual-hint">Parafusos, inserções, rolamentos, molas, etc.</p>
+
+      <div class="divider"></div>
+      <p class="subhead">Amortização e mão de obra</p>
+
+      <div class="row2">
+        <div class="field">
+          <label>Custo da impressora <span class="val">€</span></label>
           <input type="number" id="printerPrice" value="300" step="10">
         </div>
         <div class="field">
-          <label>Vida útil (horas)</label>
+          <label>Vida útil <span class="val">h</span></label>
           <input type="number" id="printerLifetime" value="8000" step="100">
         </div>
       </div>
+      <div class="row2">
+        <div class="field">
+          <label>Consumíveis <span class="val">€/h</span></label>
+          <input type="number" id="consumables" value="0.08" step="0.01">
+        </div>
+        <div class="field">
+          <label>Custo horário do operador <span class="val">€/h</span></label>
+          <input type="number" id="laborRate" value="0" step="0.5">
+        </div>
+      </div>
+      <div class="row2">
+        <div class="field">
+          <label>Preparação <span class="val">min</span></label>
+          <input type="number" id="prepMinutes" value="0" step="1" min="0">
+        </div>
+        <div class="field">
+          <label>Pós-processamento <span class="val">min</span></label>
+          <input type="number" id="postMinutes" value="0" step="1" min="0">
+        </div>
+      </div>
+      <div class="row2">
+        <div class="field">
+          <label>Embalagem <span class="val">€</span></label>
+          <input type="number" id="packagingCost" value="0" step="0.5">
+        </div>
+        <div class="field">
+          <label>Envio <span class="val">€</span></label>
+          <input type="number" id="shippingCost" value="0" step="0.5">
+        </div>
+      </div>
+
+      <div class="divider"></div>
+      <p class="subhead">Serviços adicionais</p>
 
       <div class="row2">
         <div class="field">
@@ -505,31 +524,6 @@
         </div>
       </div>
       <p class="manual-hint">Estes dois valores não entram no preço da peça — aparecem como itens separados no PDF do orçamento.</p>
-
-      <div class="row2">
-        <div class="field">
-          <label>Consumíveis impressora <span class="val">€/hora</span></label>
-          <input type="number" id="consumables" value="0.08" step="0.01">
-        </div>
-        <div class="field">
-          <label>Consumíveis externos <span class="val">€</span></label>
-          <input type="number" id="consumablesExternal" value="0" step="0.5">
-        </div>
-      </div>
-
-      <div class="divider"></div>
-      <p class="subhead">Eletricidade</p>
-
-      <div class="row2">
-        <div class="field">
-          <label>Potência impressora (W)</label>
-          <input type="number" id="power" value="150" step="5">
-        </div>
-        <div class="field">
-          <label>Custo <span class="val">€/kWh</span></label>
-          <input type="number" id="electricity" value="0.25" step="0.01">
-        </div>
-      </div>
 
       <div class="divider"></div>
 
@@ -625,24 +619,24 @@ let PRINTERS = {
 /* ======================= DOM REFS ======================= */
 const $ = id => document.getElementById(id);
 const dropzone = $('dropzone'), dropzoneInner = $('dropzoneInner'), fileInput = $('fileInput');
-const materialSel = $('material'), wallsInput = $('walls'), tbInput = $('topBottom');
-const infillInput = $('infill'), infillVal = $('infillVal');
-const layerHeightInput = $('layerHeight'), nozzleInput = $('nozzle');
-const densityInput = $('density'), flowInput = $('flow');
+const materialSel = $('material');
 const materialCostInput = $('materialCost'), printerPriceInput = $('printerPrice'), printerLifetimeInput = $('printerLifetime');
-const consumablesInput = $('consumables'), consumablesExternalInput = $('consumablesExternal'), designCostInput = $('designCost'), scanCostInput = $('scanCost');
+const consumablesInput = $('consumables'), designCostInput = $('designCost'), scanCostInput = $('scanCost');
+const laborRateInput = $('laborRate'), prepMinutesInput = $('prepMinutes'), postMinutesInput = $('postMinutes');
+const packagingCostInput = $('packagingCost'), shippingCostInput = $('shippingCost');
 const powerInput = $('power'), electricityInput = $('electricity');
 const marginInput = $('margin'), marginVal = $('marginVal');
-const manualTimeToggle = $('manualTimeToggle'), manualTimeInputs = $('manualTimeInputs');
+const manualTimeInputs = $('manualTimeInputs');
 const manualHoursInput = $('manualHours'), manualMinutesInput = $('manualMinutes');
 const manualWeightInput = $('manualWeight');
-const printerPresetSel = $('printerPreset'), printerNameInput = $('printerName');
+const printerPresetSel = $('printerPreset');
 
 let currentModel = null; // { volume, area, bbox:{x,y,z}, tris }
 let lastResult = null;   // last computed result, used by the PDF export
 let quoteItems = [];     // pieces added to the current multi-part budget
 let currentMode = 'stl'; // 'stl' | 'manual'
 let docType = 'orcamento'; // 'orcamento' | 'final'
+let components = [];     // itens de "componentes e consumíveis" (nome, preço, qtd)
 
 /* ======================= STL PARSING ======================= */
 function parseSTL(buffer){
@@ -879,35 +873,58 @@ function updateModelPanel(stats){
 /* ======================= UI WIRING ======================= */
 materialSel.addEventListener('change', () => {
   const m = MATERIALS[materialSel.value];
-  densityInput.value = m.density;
   materialCostInput.value = m.cost;
-  flowInput.value = m.flow;
   recalc();
 });
 
-function stepper(input, delta, min, max){
-  input.value = Math.max(min, Math.min(max, parseInt(input.value) + delta));
-  recalc();
-}
-$('wallsMinus').addEventListener('click', () => stepper(wallsInput, -1, 1, 8));
-$('wallsPlus').addEventListener('click', () => stepper(wallsInput, 1, 1, 8));
-$('tbMinus').addEventListener('click', () => stepper(tbInput, -1, 0, 10));
-$('tbPlus').addEventListener('click', () => stepper(tbInput, 1, 0, 10));
-
-infillInput.addEventListener('input', () => { infillVal.textContent = infillInput.value + '%'; recalc(); });
 marginInput.addEventListener('input', () => { marginVal.textContent = marginInput.value + '%'; recalc(); });
 
-[layerHeightInput, nozzleInput, densityInput, flowInput, materialCostInput,
- printerPriceInput, printerLifetimeInput, consumablesInput, consumablesExternalInput, designCostInput, scanCostInput,
+[materialCostInput,
+ printerPriceInput, printerLifetimeInput, consumablesInput, designCostInput, scanCostInput,
+ laborRateInput, prepMinutesInput, postMinutesInput, packagingCostInput, shippingCostInput,
  powerInput, electricityInput
 ].forEach(el => el.addEventListener('input', recalc));
 
-manualTimeToggle.addEventListener('change', () => {
-  manualTimeInputs.style.display = manualTimeToggle.checked ? 'grid' : 'none';
-  recalc();
-});
 [manualHoursInput, manualMinutesInput].forEach(el => el.addEventListener('input', recalc));
 manualWeightInput.addEventListener('input', recalc);
+
+/* ---- componentes e consumíveis (lista itemizada) ---- */
+function renderComponentsRows(){
+  const el = $('componentsRows');
+  el.innerHTML = components.map((c, idx) => `
+    <div class="component-row">
+      <input type="text" data-idx="${idx}" data-field="name" placeholder="ex. parafuso M3" value="${c.name.replace(/"/g,'&quot;')}">
+      <input type="number" data-idx="${idx}" data-field="price" step="0.1" min="0" value="${c.price}">
+      <input type="number" data-idx="${idx}" data-field="qty" step="1" min="1" value="${c.qty}">
+      <button type="button" class="component-remove" data-idx="${idx}" title="Remover">×</button>
+    </div>
+  `).join('');
+
+  el.querySelectorAll('input').forEach(inp => {
+    inp.addEventListener('input', () => {
+      const idx = parseInt(inp.dataset.idx);
+      const field = inp.dataset.field;
+      components[idx][field] = field === 'name' ? inp.value : (parseFloat(inp.value) || 0);
+      recalc();
+    });
+  });
+  el.querySelectorAll('.component-remove').forEach(btn => {
+    btn.addEventListener('click', () => {
+      components.splice(parseInt(btn.dataset.idx), 1);
+      renderComponentsRows();
+      recalc();
+    });
+  });
+}
+
+$('addComponentBtn').addEventListener('click', () => {
+  components.push({ name: '', price: 0, qty: 1 });
+  renderComponentsRows();
+});
+
+function getComponentsTotal(){
+  return components.reduce((sum, c) => sum + (c.price * c.qty), 0);
+}
 
 /* ---- modo: importar STL vs. inserir manualmente ---- */
 function applyModeUI(){
@@ -922,15 +939,6 @@ function applyModeUI(){
   document.querySelector('.grid-main').style.gridTemplateColumns = manual ? '1fr 1fr' : '';
 
   $('manualWeightField').style.display = manual ? 'block' : 'none';
-  $('geometryFields').style.display = manual ? 'none' : 'block';
-  $('flowField').style.display = manual ? 'none' : 'block';
-
-  $('manualTimeToggleRow').style.display = manual ? 'none' : 'block';
-  if (manual){
-    manualTimeInputs.style.display = 'grid';
-  } else {
-    manualTimeInputs.style.display = manualTimeToggle.checked ? 'grid' : 'none';
-  }
 
   if (!manual){
     // ao voltar para STL, só há resultados se já houver um modelo carregado
@@ -961,20 +969,15 @@ document.querySelectorAll('.doc-type-btn').forEach(btn => {
 /* ---- perfil de impressora ---- */
 printerPresetSel.addEventListener('change', () => {
   const preset = PRINTERS[printerPresetSel.value];
-  $('printerNameField').style.display = printerPresetSel.value === 'custom' ? 'none' : 'block';
   $('printerPresetHint').style.display = printerPresetSel.value === 'custom' ? 'none' : 'block';
   if (preset){
     printerPriceInput.value = preset.price;
     powerInput.value = preset.power;
     if (preset.lifetimeHours) printerLifetimeInput.value = preset.lifetimeHours;
     if (preset.consumablesPerHour !== undefined) consumablesInput.value = preset.consumablesPerHour;
-    if (!printerNameInput.value){
-      printerNameInput.value = printerPresetSel.options[printerPresetSel.selectedIndex].text;
-    }
     recalc();
   }
 });
-$('printerNameField').style.display = 'none';
 
 applyModeUI();
 
@@ -1065,63 +1068,51 @@ function fmtTime(totalSeconds){
   return `${h}h ${String(m).padStart(2,'0')}min`;
 }
 
+// Parâmetros de fatiamento fixos, usados apenas para a estimativa de peso a partir do STL
+// (o utilizador já não os edita — a app assume valores típicos de uma impressão normal)
+const DEFAULT_WALLS = 2;
+const DEFAULT_NOZZLE = 0.4;      // mm
+const DEFAULT_LAYER_HEIGHT = 0.2; // mm
+const DEFAULT_TOP_BOTTOM_LAYERS = 4;
+const DEFAULT_INFILL = 0.15;     // 15%
+
 function recalc(){
   if (currentMode === 'stl' && !currentModel) return;
 
-  let weightG, timeS, filamentLenM, infillPctDisplay;
+  // tempo de impressão: sempre inserido manualmente (ex. valor exato do slicer)
+  const mh = parseFloat(manualHoursInput.value) || 0;
+  const mm = parseFloat(manualMinutesInput.value) || 0;
+  const timeS = mh * 3600 + mm * 60;
+
+  const density = (MATERIALS[materialSel.value] && MATERIALS[materialSel.value].density) || 1.24;
+
+  let weightG, filamentLenM;
 
   if (currentMode === 'manual'){
-    // ---- modo manual: sem STL, valores inseridos diretamente ----
+    // ---- modo manual: sem STL, peso inserido diretamente ----
     weightG = parseFloat(manualWeightInput.value) || 0;
-    const mh = parseFloat(manualHoursInput.value) || 0;
-    const mm = parseFloat(manualMinutesInput.value) || 0;
-    timeS = mh * 3600 + mm * 60;
-    const density = parseFloat(densityInput.value) || 1;
     filamentLenM = (weightG / density) / 2.405; // g -> cm3 -> comprimento (m) a 1.75mm
-    infillPctDisplay = '—';
   } else {
-    // ---- modo STL: estimativa geométrica ----
+    // ---- modo STL: estimativa geométrica de peso (paredes + preenchimento) ----
     const V = currentModel.volume;   // mm3
     const SA = currentModel.area;    // mm2
     const bbox = currentModel.bbox;  // mm
 
-    const walls = parseInt(wallsInput.value);
-    const nozzle = parseFloat(nozzleInput.value);
-    const layerH = parseFloat(layerHeightInput.value);
-    const tbLayers = parseInt(tbInput.value);
-    const infillPct = parseFloat(infillInput.value) / 100;
-    const density = parseFloat(densityInput.value);
-    const flow = parseFloat(flowInput.value);
-
-    // --- geometric estimate of printed volume ---
-    const wallThickness = walls * nozzle;
+    const wallThickness = DEFAULT_WALLS * DEFAULT_NOZZLE;
     let shellVolume = Math.min(SA * wallThickness, V);
 
     const footprint = bbox.x * bbox.y;
-    const tbThickness = tbLayers * layerH;
+    const tbThickness = DEFAULT_TOP_BOTTOM_LAYERS * DEFAULT_LAYER_HEIGHT;
     let tbVolume = Math.min(footprint * tbThickness * 2, Math.max(V - shellVolume, 0));
     if (tbVolume < 0) tbVolume = 0;
 
     let solidSkin = Math.min(shellVolume + tbVolume, V);
     const core = Math.max(V - solidSkin, 0);
-    const infillVolume = core * infillPct;
+    const infillVolume = core * DEFAULT_INFILL;
     const totalVolume = solidSkin + infillVolume; // mm3
 
     weightG = (totalVolume/1000) * density;
     filamentLenM = (totalVolume / 2.405) / 1000; // 1.75mm filament cross-section ≈2.405mm²
-    infillPctDisplay = infillInput.value;
-
-    // --- time estimate (geometric) or manual override ---
-    if (manualTimeToggle.checked){
-      const mh = parseFloat(manualHoursInput.value) || 0;
-      const mm = parseFloat(manualMinutesInput.value) || 0;
-      timeS = mh * 3600 + mm * 60;
-    } else {
-      const layers = Math.max(Math.round(bbox.z / layerH), 1);
-      timeS = totalVolume / flow;
-      timeS += layers * 3;      // per-layer travel/retraction overhead
-      timeS *= 1.15;             // outer wall / travel inefficiency factor
-    }
   }
 
   const timeH = timeS / 3600;
@@ -1136,23 +1127,32 @@ function recalc(){
 
   const consumablesRate = parseFloat(consumablesInput.value) || 0;
   const consumablesPrinterCost = consumablesRate * timeH;
-  const consumablesExternalCost = parseFloat(consumablesExternalInput.value) || 0;
+  const componentsCost = getComponentsTotal();
+
+  const laborRate = parseFloat(laborRateInput.value) || 0;
+  const prepH = (parseFloat(prepMinutesInput.value) || 0) / 60;
+  const postH = (parseFloat(postMinutesInput.value) || 0) / 60;
+  const laborCost = laborRate * (prepH + postH);
+
+  const packagingCost = parseFloat(packagingCostInput.value) || 0;
+  const shippingCost = parseFloat(shippingCostInput.value) || 0;
 
   const powerW = parseFloat(powerInput.value);
   const kwhCost = parseFloat(electricityInput.value);
   const electricityCost = (powerW/1000) * timeH * kwhCost;
 
   // custo de desenho e de scan 3D NÃO entram no preço da peça — são itens à parte no orçamento
-  const subtotal = materialCost + machineCost + consumablesPrinterCost + consumablesExternalCost + electricityCost;
+  const subtotal = materialCost + machineCost + consumablesPrinterCost + componentsCost
+                  + laborCost + packagingCost + shippingCost + electricityCost;
   const margin = parseFloat(marginInput.value) / 100;
   const profit = subtotal * margin;
   const finalPrice = subtotal + profit;
 
   lastResult = {
     weightG, timeS, filamentLenM, materialCost, machineCost,
-    consumablesPrinterCost, consumablesExternalCost, electricityCost,
+    consumablesPrinterCost, componentsCost, laborCost, packagingCost, shippingCost, electricityCost,
     subtotal, profit, finalPrice,
-    material: (MATERIALS[materialSel.value] && MATERIALS[materialSel.value].label) || materialSel.value, infillPct: infillPctDisplay
+    material: (MATERIALS[materialSel.value] && MATERIALS[materialSel.value].label) || materialSel.value
   };
   renderResults(lastResult);
 }
@@ -1171,8 +1171,10 @@ function renderResults(r){
   const parts = [
     { label:'Material', value:r.materialCost, color:'#ff6a3d' },
     { label:'Impressora', value:r.machineCost, color:'#28e0c4' },
-    { label:'Consum. impressora', value:r.consumablesPrinterCost, color:'#7c8cff' },
-    { label:'Consum. externos', value:r.consumablesExternalCost, color:'#c77dff' },
+    { label:'Consumíveis', value:r.consumablesPrinterCost, color:'#7c8cff' },
+    { label:'Componentes', value:r.componentsCost, color:'#c77dff' },
+    { label:'Mão de obra', value:r.laborCost, color:'#ffd166' },
+    { label:'Embalagem/envio', value:r.packagingCost + r.shippingCost, color:'#4dd0e1' },
     { label:'Eletricidade', value:r.electricityCost, color:'#ff8fa3' },
     { label:'Lucro', value:r.profit, color:'#3a4050' },
   ];
@@ -1216,7 +1218,6 @@ function getCurrentAsQuoteItem(){
     material: lastResult.material,
     weightG: lastResult.weightG,
     timeS: lastResult.timeS,
-    infillPct: lastResult.infillPct,
     unitPrice: lastResult.finalPrice,
     thumb: captureThumb()
   };
