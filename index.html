@@ -483,10 +483,11 @@
         </select>
       </div>
 
-      <div class="field" id="manualWeightField" style="display:none">
+      <div class="field" id="manualWeightField">
         <label>Peso da peça <span class="val">g</span></label>
         <input type="number" id="manualWeight" value="0" step="1" min="0">
       </div>
+      <p class="manual-hint" id="manualWeightHint">Deixa em 0 para usar a estimativa automática a partir do STL, ou insere aqui o peso exato do teu slicer.</p>
 
       <div class="divider"></div>
 
@@ -956,7 +957,7 @@ function applyModeUI(){
   dropzone.style.display = manual ? 'none' : '';
   $('viewerCard').style.display = manual ? 'none' : '';
 
-  $('manualWeightField').style.display = manual ? 'block' : 'none';
+  $('manualWeightHint').style.display = manual ? 'none' : 'block';
 
   if (!manual){
     // ao voltar para STL, só há resultados se já houver um modelo carregado
@@ -1131,6 +1132,13 @@ function recalc(){
 
     weightG = (totalVolume/1000) * density;
     filamentLenM = (totalVolume / 2.405) / 1000; // 1.75mm filament cross-section ≈2.405mm²
+
+    // se o utilizador inserir um peso manual (>0), este substitui a estimativa geométrica
+    const manualW = parseFloat(manualWeightInput.value) || 0;
+    if (manualW > 0){
+      weightG = manualW;
+      filamentLenM = (weightG / density) / 2.405;
+    }
   }
 
   const timeH = timeS / 3600;
