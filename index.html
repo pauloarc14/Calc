@@ -327,6 +327,47 @@
     display:flex;align-items:center;justify-content:center;transition:all .15s;
   }
   .component-remove:hover{border-color:var(--danger);color:var(--danger);}
+
+  /* ---------- HISTÓRICO DE CLIENTES ---------- */
+  .hist-bar{display:grid;grid-template-columns:1fr;gap:8px;margin-bottom:12px;}
+  .hist-status{font-size:11.5px;color:var(--text-faint);min-height:16px;margin:4px 0 8px;line-height:1.5;}
+  .hist-status.ok{color:var(--accent-2);}
+  .hist-status.warn{color:var(--warn);}
+  .hist-status.err{color:var(--danger);}
+  details.gh-settings{background:var(--panel-2);border:1px solid var(--border-soft);border-radius:9px;padding:9px 12px;}
+  details.gh-settings summary{cursor:pointer;font-size:12px;color:var(--text-dim);font-weight:600;}
+  details.gh-settings[open] summary{margin-bottom:10px;}
+  .gh-settings label{display:block;font-size:11.5px;color:var(--text-dim);margin:8px 0 5px;}
+  .gh-settings .manual-hint{margin:8px 0 0;}
+  .edit-banner{display:none;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;
+    background:var(--accent-2-soft);border:1px solid #28e0c444;color:var(--accent-2);
+    border-radius:9px;padding:9px 12px;font-size:12px;margin:6px 0 10px;line-height:1.45;}
+  .edit-banner button{flex-shrink:0;}
+  .btn-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px;}
+  .btn-row.one{grid-template-columns:1fr;}
+  .hist-title{font-size:11px;color:var(--text-faint);text-transform:uppercase;letter-spacing:.06em;margin:22px 0 8px;}
+  .hist-row{display:flex;align-items:center;gap:10px;padding:10px 2px;border-bottom:1px solid var(--border-soft);flex-wrap:wrap;}
+  .hist-main{flex:1;min-width:150px;}
+  .hist-tag{display:inline-block;font-size:10px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;
+    padding:2px 7px;border-radius:5px;margin-right:6px;background:var(--accent-soft);color:var(--accent);}
+  .hist-tag.final{background:var(--accent-2-soft);color:var(--accent-2);}
+  .hist-date{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text);}
+  .hist-meta{font-size:11px;color:var(--text-faint);margin-top:3px;}
+  .hist-total{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:600;color:var(--accent);}
+  .hist-actions{display:flex;gap:6px;}
+  .hist-actions button{padding:6px 10px;font-size:11.5px;border-radius:7px;cursor:pointer;}
+  .hist-actions .del:hover{border-color:var(--danger);color:var(--danger);}
+  .hist-empty{font-size:12px;color:var(--text-faint);padding:6px 2px;}
+  .quote-item-row{flex-wrap:wrap;}
+  .quote-item-row .qi-left{flex:1;min-width:140px;}
+  .qi-in{background:var(--panel-2);border:1px solid var(--border);color:var(--text);border-radius:6px;
+    padding:5px 7px;font-size:12px;outline:none;font-family:'JetBrains Mono',monospace;}
+  .qi-in:focus{border-color:var(--accent);}
+  input.qi-name-in{width:100%;font-family:'Space Grotesk',sans-serif;font-size:12.5px;}
+  input.qi-qty-in{width:52px;}
+  input.qi-price-in{width:76px;}
+  .qi-x{color:var(--text-faint);font-size:12px;}
+  .quote-item-row .qi-price{min-width:62px;text-align:right;}
 </style>
 </head>
 <body>
@@ -589,6 +630,22 @@
           <button type="button" class="doc-type-btn" data-doctype="final">Valor a pagar</button>
         </div>
 
+        <div class="hist-bar">
+          <select id="clientSelect"><option value="">— Clientes guardados —</option></select>
+          <details class="gh-settings" id="ghSettings">
+            <summary>Ligação ao GitHub (histórico de clientes)</summary>
+            <label for="ghRepo">Repositório privado (dono/nome)</label>
+            <input type="text" id="ghRepo" placeholder="pauloarc14/calc-dados" autocomplete="off" autocapitalize="off" spellcheck="false">
+            <label for="ghBranch">Ramo</label>
+            <input type="text" id="ghBranch" placeholder="main" autocomplete="off" autocapitalize="off" spellcheck="false">
+            <label for="ghToken">Token de acesso (fine-grained, só esse repositório, Contents: leitura e escrita)</label>
+            <input type="password" id="ghToken" placeholder="github_pat_…" autocomplete="off">
+            <div class="btn-row one"><button class="btn-ghost" id="ghSaveBtn" type="button">Guardar e testar ligação</button></div>
+            <p class="manual-hint">O token fica guardado só neste browser (localStorage) e nunca vai para o código do site. Usa um repositório <b>privado</b>, porque aí ficam os dados dos clientes.</p>
+          </details>
+        </div>
+        <div class="hist-status" id="histStatus"></div>
+
         <div class="quote-grid">
           <input type="text" id="clientName" placeholder="Nome do cliente">
           <input type="text" id="partName" placeholder="Descrição da peça">
@@ -596,6 +653,9 @@
         <div class="quote-grid">
           <input type="text" id="businessName" placeholder="O teu nome / empresa (opcional)">
           <input type="number" id="quantity" class="qty-input" placeholder="Quantidade" value="1" min="1">
+        </div>
+        <div class="quote-grid">
+          <input type="date" id="docDate" title="Data de emissão do documento">
         </div>
 
         <div class="row2" style="margin-top:2px;">
@@ -606,6 +666,17 @@
         <div id="quoteItemsList"></div>
 
         <button class="btn-primary" id="generatePdfBtn" type="button">Gerar PDF do orçamento</button>
+
+        <div class="edit-banner" id="editBanner">
+          <span>Documento guardado em edição. Gerar o PDF atualiza este documento no histórico.</span>
+          <button class="btn-ghost" id="newDocBtn" type="button">Novo documento</button>
+        </div>
+        <div class="btn-row">
+          <button class="btn-ghost" id="saveOnlyBtn" type="button">Guardar sem PDF</button>
+          <button class="btn-ghost" id="saveAsNewBtn" type="button" style="display:none">Guardar como novo + PDF</button>
+        </div>
+
+        <div id="histList"></div>
       </div>
     </div>
   </div>
@@ -981,7 +1052,7 @@ document.querySelectorAll('.doc-type-btn').forEach(btn => {
   btn.addEventListener('click', () => {
     docType = btn.dataset.doctype;
     document.querySelectorAll('.doc-type-btn').forEach(b => b.classList.toggle('active', b === btn));
-    $('generatePdfBtn').textContent = docType === 'orcamento' ? 'Gerar PDF do orçamento' : 'Gerar PDF — valor a pagar';
+    updateGenerateLabel();
   });
 });
 
@@ -1232,8 +1303,17 @@ function captureThumb(){
     group.rotation.y = Math.PI / 4;                 // 45°
     group.rotation.x = -Math.atan(1 / Math.sqrt(2)); // ~35.264° — ângulo isométrico clássico
     renderer.render(scene, camera);
-    const dataUrl = renderer.domElement.toDataURL('image/png');
-    const w = renderer.domElement.width, h = renderer.domElement.height;
+    const src = renderer.domElement;
+    // miniatura pequena em JPEG sobre fundo branco: mantém os ficheiros do histórico leves
+    const scale = Math.min(1, 220 / Math.max(src.width, src.height));
+    const w = Math.max(1, Math.round(src.width * scale)), h = Math.max(1, Math.round(src.height * scale));
+    const c = document.createElement('canvas');
+    c.width = w; c.height = h;
+    const ctx = c.getContext('2d');
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, w, h);
+    ctx.drawImage(src, 0, 0, w, h);
+    const dataUrl = c.toDataURL('image/jpeg', 0.8);
     group.rotation.y = prevY;
     group.rotation.x = prevX;
     return { dataUrl, w, h };
@@ -1258,26 +1338,48 @@ function escapeHtml(str){
   return str.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
 
+function updateQuoteTotals(){
+  let total = 0;
+  quoteItems.forEach((item, idx) => {
+    const line = item.unitPrice * item.qty;
+    total += line;
+    const span = $('qiLine' + idx);
+    if (span) span.textContent = '€' + line.toFixed(2);
+  });
+  const t = $('quoteTotalVal');
+  if (t) t.textContent = '€' + total.toFixed(2);
+}
+
 function renderQuoteItemsList(){
   const el = $('quoteItemsList');
   if (quoteItems.length === 0){ el.innerHTML = ''; return; }
-  let total = 0;
-  let html = quoteItems.map((item, idx) => {
-    const lineTotal = item.unitPrice * item.qty;
-    total += lineTotal;
-    return `<div class="quote-item-row">
-      <div>
-        <div class="qi-name">${escapeHtml(item.partName)}${item.qty > 1 ? ' ×' + item.qty : ''}</div>
+  let html = quoteItems.map((item, idx) => `<div class="quote-item-row">
+      <div class="qi-left">
+        <input type="text" class="qi-in qi-name-in" data-idx="${idx}" data-f="partName" value="${escapeHtml(item.partName)}" title="Descrição da peça">
         <div class="qi-meta">${escapeHtml(item.material)} · ${item.weightG.toFixed(1)}g · ${fmtTime(item.timeS)}</div>
       </div>
       <div class="qi-right">
-        <span class="qi-price">€${lineTotal.toFixed(2)}</span>
-        <button class="qi-remove" data-idx="${idx}" type="button" title="Remover">×</button>
+        <input type="number" class="qi-in qi-qty-in" data-idx="${idx}" data-f="qty" value="${item.qty}" min="1" step="1" title="Quantidade">
+        <span class="qi-x">×</span>
+        <input type="number" class="qi-in qi-price-in" data-idx="${idx}" data-f="unitPrice" value="${item.unitPrice.toFixed(2)}" min="0" step="0.01" title="Preço unitário (€)">
+        <span class="qi-price" id="qiLine${idx}"></span>
+        <button class="qi-remove" data-idx="${idx}" type="button" title="Remover">✕</button>
       </div>
-    </div>`;
-  }).join('');
-  html += `<div class="quote-total-row"><span>Total (${quoteItems.length} peça${quoteItems.length>1?'s':''})</span><span>€${total.toFixed(2)}</span></div>`;
+    </div>`).join('');
+  html += `<div class="quote-total-row"><span>Total (${quoteItems.length} peça${quoteItems.length>1?'s':''})</span><span id="quoteTotalVal"></span></div>`;
   el.innerHTML = html;
+  updateQuoteTotals();
+  el.querySelectorAll('.qi-in').forEach(inp => {
+    inp.addEventListener('input', () => {
+      const it = quoteItems[parseInt(inp.dataset.idx)];
+      if (!it) return;
+      const f = inp.dataset.f;
+      if (f === 'partName') it.partName = inp.value;
+      else if (f === 'qty') it.qty = Math.max(parseInt(inp.value) || 1, 1);
+      else it.unitPrice = Math.max(parseFloat(inp.value) || 0, 0);
+      updateQuoteTotals();
+    });
+  });
   el.querySelectorAll('.qi-remove').forEach(btn => {
     btn.addEventListener('click', () => {
       quoteItems.splice(parseInt(btn.dataset.idx), 1);
@@ -1311,26 +1413,28 @@ function addFittedImage(doc, thumb, boxX, boxY, boxW, boxH, pad){
   else { drawH = boxH - pad*2; drawW = drawH * imgAspect; }
   const drawX = boxX + (boxW - drawW) / 2;
   const drawY = boxY + (boxH - drawH) / 2;
-  doc.addImage(thumb.dataUrl, 'PNG', drawX, drawY, drawW, drawH);
+  doc.addImage(thumb.dataUrl, /^data:image\/png/i.test(thumb.dataUrl) ? 'PNG' : 'JPEG', drawX, drawY, drawW, drawH);
 }
 
 /* ======================= PDF DO ORÇAMENTO ======================= */
-$('generatePdfBtn').addEventListener('click', generatePDF);
+$('generatePdfBtn').addEventListener('click', () => onGenerateClick(false));
 
-function generatePDF(){
-  let items = quoteItems.length ? quoteItems.slice() : (getCurrentAsQuoteItem() ? [getCurrentAsQuoteItem()] : []);
-  if (items.length === 0){
-    alert('Calcula primeiro uma peça (STL ou valores manuais), ou adiciona peças ao orçamento, para gerar o PDF.');
-    return;
-  }
+function parseISODate(iso){
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso || '');
+  return m ? new Date(+m[1], +m[2] - 1, +m[3]) : new Date();
+}
 
+function buildPDF(data){
+  const items = data.itens || [];
+  const tipo = data.tipo;
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF({ unit:'mm', format:'a4' });
 
-  const clientName = $('clientName').value.trim() || '—';
-  const businessName = $('businessName').value.trim();
-  const designCost = parseFloat(designCostInput.value) || 0;
-  const scanCost = parseFloat(scanCostInput.value) || 0;
+  const clientName = (data.cliente || '').trim() || '—';
+  const businessName = (data.empresa || '').trim();
+  const designCost = data.designCost || 0;
+  const scanCost = data.scanCost || 0;
+  const issueDate = parseISODate(data.emitidoEm);
 
   const marginX = 20;
   const pageBottom = 280;
@@ -1364,11 +1468,11 @@ function generatePDF(){
   doc.setFontSize(16);
   doc.setTextColor(20, 20, 20);
   doc.setFont('helvetica', 'bold');
-  doc.text(docType === 'orcamento' ? 'ORÇAMENTO' : 'VALOR A PAGAR', 190, 22, { align: 'right' });
+  doc.text(tipo === 'orcamento' ? 'ORÇAMENTO' : 'VALOR A PAGAR', 190, 22, { align: 'right' });
   doc.setFontSize(9.5);
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(120, 120, 120);
-  doc.text('Emitido em ' + new Date().toLocaleDateString('pt-PT'), 190, 28, { align: 'right' });
+  doc.text('Emitido em ' + issueDate.toLocaleDateString('pt-PT'), 190, 28, { align: 'right' });
 
   y = Math.max(y, 40);
 
@@ -1471,27 +1575,404 @@ function generatePDF(){
   doc.setFontSize(15);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(255, 106, 61);
-  doc.text((docType === 'orcamento' ? 'Total do orçamento: €' : 'Total a pagar: €') + grandTotal.toFixed(2), marginX, y);
+  doc.text((tipo === 'orcamento' ? 'Total do orçamento: €' : 'Total a pagar: €') + grandTotal.toFixed(2), marginX, y);
   y += 14;
 
   // rodapé
   doc.setFontSize(8);
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(150, 150, 150);
-  const footerText = docType === 'orcamento'
+  const footerText = tipo === 'orcamento'
     ? 'Orçamento válido por 15 dias a partir da data de emissão. Valores sujeitos a confirmação após validação final dos ficheiros e das especificações de cada peça.'
     : 'Documento referente ao valor total a liquidar pelo trabalho descrito acima.';
   doc.text(footerText, marginX, Math.min(y + 6, pageBottom), { maxWidth: 170 });
 
-  const prefix = docType === 'orcamento' ? 'orcamento' : 'valor-a-pagar';
+  const prefix = tipo === 'orcamento' ? 'orcamento' : 'valor-a-pagar';
   const safeName = clientName !== '—' ? clientName.replace(/[^a-z0-9]+/gi, '-') : prefix;
   doc.save(`${prefix}-${safeName}.pdf`);
+}
+
+/* ======================= HISTÓRICO DE CLIENTES (repositório privado no GitHub) =======================
+   Estrutura no repositório de dados:
+     indice.json            -> { clientes: [ { slug, nome } ] }
+     clientes/<slug>.json   -> { nome, docs: [ { id, tipo, emitidoEm, empresa, designCost, scanCost, itens[] } ] }
+   O PDF não é guardado: guardam-se os dados e o PDF é gerado de novo quando for preciso.            */
+const LS = {
+  get(k){ try { return localStorage.getItem(k) || ''; } catch(e){ return ''; } },
+  set(k, v){ try { localStorage.setItem(k, v); } catch(e){} }
+};
+let clientIndex = [];     // [{ slug, nome }]
+let clientDocs = [];      // documentos do cliente selecionado
+let currentSlug = '';     // cliente cujo histórico está visível
+let currentDocId = null;  // documento guardado em edição (null = novo)
+let editingSlug = '';     // cliente a que o documento em edição pertence
+
+function ghCfg(){
+  return { token: LS.get('pa_gh_token').trim(), repo: LS.get('pa_gh_repo').trim(), branch: LS.get('pa_gh_branch').trim() || 'main' };
+}
+function ghReady(){ const c = ghCfg(); return !!c.token && /^[\w.-]+\/[\w.-]+$/.test(c.repo); }
+
+function b64encodeUtf8(str){
+  const bytes = new TextEncoder().encode(str);
+  let bin = '';
+  for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
+  return btoa(bin);
+}
+function b64decodeUtf8(b64){
+  const bin = atob(b64.replace(/\s/g, ''));
+  const bytes = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  return new TextDecoder().decode(bytes);
+}
+function ghErrMsg(status){
+  if (status === 401) return 'token inválido ou expirado';
+  if (status === 403) return 'sem permissão (confirma "Contents: leitura e escrita") ou limite de pedidos';
+  if (status === 404) return 'repositório não encontrado (confirma o nome e o acesso do token)';
+  return 'erro do GitHub (' + status + ')';
+}
+function ghFetch(url, opts){
+  const c = ghCfg();
+  opts = opts || {};
+  return fetch(url, Object.assign({ cache:'no-store' }, opts, {
+    headers: Object.assign({ 'Authorization':'Bearer ' + c.token, 'Accept':'application/vnd.github+json' }, opts.headers || {})
+  }));
+}
+async function ghRead(path){
+  const c = ghCfg();
+  const base = 'https://api.github.com/repos/' + c.repo;
+  const res = await ghFetch(base + '/contents/' + path + '?ref=' + encodeURIComponent(c.branch));
+  if (res.status === 404) return { data: null, sha: null };
+  if (!res.ok) throw new Error(ghErrMsg(res.status));
+  const j = await res.json();
+  let b64 = j.content;
+  if (!b64 || j.encoding === 'none'){           // ficheiros > 1 MB: ler pelo blob
+    const r2 = await ghFetch(base + '/git/blobs/' + j.sha);
+    if (!r2.ok) throw new Error(ghErrMsg(r2.status));
+    b64 = (await r2.json()).content;
+  }
+  return { data: JSON.parse(b64decodeUtf8(b64)), sha: j.sha };
+}
+async function ghWrite(path, obj, sha, message){
+  const c = ghCfg();
+  const body = { message, content: b64encodeUtf8(JSON.stringify(obj)), branch: c.branch };
+  if (sha) body.sha = sha;
+  const res = await ghFetch('https://api.github.com/repos/' + c.repo + '/contents/' + path, {
+    method: 'PUT', headers: { 'Content-Type':'application/json' }, body: JSON.stringify(body)
+  });
+  if (res.status === 409){ const e = new Error('conflito'); e.conflict = true; throw e; }
+  if (res.status === 422){
+    let m = ''; try { m = (await res.json()).message || ''; } catch(e){}
+    const e = new Error(m || 'pedido inválido'); e.conflict = /sha|match/i.test(m); throw e;
+  }
+  if (!res.ok) throw new Error(ghErrMsg(res.status));
+  return res.json();
+}
+/* lê o ficheiro, aplica a alteração e grava; repete se alguém o alterou entretanto */
+async function ghUpdate(path, mutate, message){
+  for (let attempt = 0; attempt < 3; attempt++){
+    const { data, sha } = await ghRead(path);
+    const next = mutate(data);
+    try { await ghWrite(path, next, sha, message); return next; }
+    catch(e){ if (!e.conflict || attempt === 2) throw e; }
+  }
+}
+
+function slugify(name){
+  return (name || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'cliente';
+}
+function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
+function todayISO(){
+  const d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+}
+function fmtDatePT(iso){ const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso || ''); return m ? `${m[3]}/${m[2]}/${m[1]}` : (iso || '—'); }
+function docTotal(d){
+  return (d.itens || []).reduce((s, it) => s + it.unitPrice * it.qty, 0) + (d.designCost || 0) + (d.scanCost || 0);
+}
+function setHistStatus(msg, kind){
+  const el = $('histStatus');
+  el.textContent = msg || '';
+  el.className = 'hist-status' + (kind ? ' ' + kind : '');
+}
+
+function updateGenerateLabel(){
+  const label = docType === 'orcamento' ? 'orçamento' : 'valor a pagar';
+  $('generatePdfBtn').textContent = currentDocId
+    ? 'Guardar alterações e gerar PDF (' + label + ')'
+    : (docType === 'orcamento' ? 'Gerar PDF do orçamento' : 'Gerar PDF — valor a pagar');
+}
+function updateEditUI(){
+  const editing = !!currentDocId;
+  $('editBanner').style.display = editing ? 'flex' : 'none';
+  $('saveAsNewBtn').style.display = editing ? '' : 'none';
+  updateGenerateLabel();
+}
+
+function renderClientSelect(){
+  const sel = $('clientSelect');
+  sel.innerHTML = '<option value="">— Clientes guardados —</option>' +
+    clientIndex.slice().sort((a, b) => a.nome.localeCompare(b.nome, 'pt'))
+      .map(c => `<option value="${escapeHtml(c.slug)}">${escapeHtml(c.nome)}</option>`).join('');
+  sel.value = clientIndex.some(c => c.slug === currentSlug) ? currentSlug : '';
+}
+
+function renderHistory(){
+  const el = $('histList');
+  const cli = clientIndex.find(c => c.slug === currentSlug);
+  if (!currentSlug || !cli){ el.innerHTML = ''; return; }
+  const docs = clientDocs.slice().sort((a, b) =>
+    (b.emitidoEm || '').localeCompare(a.emitidoEm || '') || (b.atualizadoEm || '').localeCompare(a.atualizadoEm || ''));
+  let html = `<div class="hist-title">Histórico — ${escapeHtml(cli.nome)}</div>`;
+  if (!docs.length) html += '<div class="hist-empty">Ainda não há documentos guardados para este cliente.</div>';
+  html += docs.map(d => {
+    const names = (d.itens || []).map(i => i.partName).slice(0, 2).join(', ');
+    const n = (d.itens || []).length;
+    return `<div class="hist-row">
+      <div class="hist-main">
+        <span class="hist-tag ${d.tipo === 'final' ? 'final' : ''}">${d.tipo === 'final' ? 'Valor a pagar' : 'Orçamento'}</span>
+        <span class="hist-date">${fmtDatePT(d.emitidoEm)}</span>
+        <div class="hist-meta">${n} peça${n === 1 ? '' : 's'}${names ? ' · ' + escapeHtml(names) + (n > 2 ? '…' : '') : ''}</div>
+      </div>
+      <div class="hist-total">€${docTotal(d).toFixed(2)}</div>
+      <div class="hist-actions">
+        <button class="btn-ghost" type="button" data-act="open" data-id="${escapeHtml(d.id)}">Abrir</button>
+        <button class="btn-ghost" type="button" data-act="pdf" data-id="${escapeHtml(d.id)}">PDF</button>
+        <button class="btn-ghost del" type="button" data-act="del" data-id="${escapeHtml(d.id)}" title="Apagar">✕</button>
+      </div>
+    </div>`;
+  }).join('');
+  el.innerHTML = html;
+  el.querySelectorAll('button[data-act]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const id = btn.dataset.id, act = btn.dataset.act;
+      if (act === 'open') openDoc(id);
+      else if (act === 'pdf') pdfFromHistory(id);
+      else if (act === 'del') deleteDoc(id);
+    });
+  });
+}
+
+async function loadIndex(){
+  if (!ghReady()){
+    clientIndex = []; clientDocs = []; currentSlug = '';
+    renderClientSelect(); renderHistory();
+    setHistStatus('Histórico desligado: abre "Ligação ao GitHub" e preenche o repositório e o token para guardar os documentos.', 'warn');
+    return;
+  }
+  try {
+    setHistStatus('A carregar clientes…');
+    const { data } = await ghRead('indice.json');
+    clientIndex = (data && data.clientes) || [];
+    renderClientSelect();
+    setHistStatus('');
+  } catch(e){ setHistStatus('Não foi possível carregar os clientes: ' + e.message, 'err'); }
+}
+
+async function loadClientDocs(slug){
+  currentSlug = slug; clientDocs = [];
+  renderHistory();
+  if (!slug || !ghReady()) return;
+  try {
+    setHistStatus('A carregar histórico…');
+    const { data } = await ghRead('clientes/' + slug + '.json');
+    clientDocs = (data && data.docs) || [];
+    setHistStatus('');
+  } catch(e){ setHistStatus('Não foi possível carregar o histórico: ' + e.message, 'err'); }
+  renderHistory();
+}
+
+function collectDoc(forceNew){
+  const items = quoteItems.length
+    ? JSON.parse(JSON.stringify(quoteItems))
+    : (() => { const it = getCurrentAsQuoteItem(); return it ? [it] : []; })();
+  return {
+    id: (!forceNew && currentDocId) ? currentDocId : uid(),
+    tipo: docType,
+    cliente: $('clientName').value.trim(),
+    empresa: $('businessName').value.trim(),
+    emitidoEm: $('docDate').value || todayISO(),
+    designCost: parseFloat(designCostInput.value) || 0,
+    scanCost: parseFloat(scanCostInput.value) || 0,
+    itens: items
+  };
+}
+
+async function persistDoc(data){
+  if (!ghReady()){
+    setHistStatus('PDF gerado, mas não ficou guardado: liga o GitHub em "Ligação ao GitHub".', 'warn');
+    return false;
+  }
+  const nome = data.cliente || 'Sem nome';
+  const slug = slugify(nome);
+  const now = new Date().toISOString();
+  const rec = Object.assign({}, data, { atualizadoEm: now });
+  delete rec.cliente;                      // o nome fica no ficheiro do cliente
+  const movedFrom = (currentDocId === data.id && editingSlug && editingSlug !== slug) ? editingSlug : '';
+  try {
+    setHistStatus('A guardar no histórico…');
+    const file = await ghUpdate('clientes/' + slug + '.json', cur => {
+      const f = cur || { nome, docs: [] };
+      const i = f.docs.findIndex(d => d.id === rec.id);
+      if (i >= 0) f.docs[i] = Object.assign({}, f.docs[i], rec);
+      else f.docs.push(Object.assign({ criadoEm: now }, rec));
+      return f;
+    }, (data.tipo === 'final' ? 'Valor a pagar' : 'Orçamento') + ' — ' + nome);
+
+    if (!clientIndex.some(c => c.slug === slug)){
+      const idx = await ghUpdate('indice.json', cur => {
+        const x = cur || { clientes: [] };
+        if (!x.clientes.some(c => c.slug === slug)) x.clientes.push({ slug, nome: file.nome || nome });
+        return x;
+      }, 'Novo cliente — ' + nome);
+      clientIndex = idx.clientes;
+    }
+    if (movedFrom){                        // cliente mudou de nome: tira o documento do cliente antigo
+      await ghUpdate('clientes/' + movedFrom + '.json', cur => {
+        if (cur) cur.docs = cur.docs.filter(d => d.id !== rec.id);
+        return cur || { nome: movedFrom, docs: [] };
+      }, 'Documento movido para ' + nome);
+    }
+    currentDocId = rec.id; editingSlug = slug; currentSlug = slug; clientDocs = file.docs;
+    renderClientSelect(); renderHistory(); updateEditUI();
+    setHistStatus('Guardado no histórico ✓', 'ok');
+    return true;
+  } catch(e){
+    setHistStatus('PDF gerado, mas falhou o guardar no histórico: ' + e.message, 'err');
+    return false;
+  }
+}
+
+function onGenerateClick(forceNew){
+  const data = collectDoc(forceNew);
+  if (!data.itens.length){
+    alert('Calcula primeiro uma peça (STL ou valores manuais), ou adiciona peças ao orçamento, para gerar o PDF.');
+    return;
+  }
+  buildPDF(data);          // o PDF nunca fica à espera da rede
+  persistDoc(data);
+}
+
+function onSaveOnly(){
+  const data = collectDoc(false);
+  if (!data.itens.length){ alert('Não há peças para guardar. Calcula uma peça ou adiciona peças ao orçamento.'); return; }
+  persistDoc(data).then(ok => { if (ok) setHistStatus('Guardado no histórico ✓ (sem PDF)', 'ok'); });
+}
+
+function openDoc(id){
+  const d = clientDocs.find(x => x.id === id);
+  if (!d) return;
+  const cli = clientIndex.find(c => c.slug === currentSlug);
+  $('clientName').value = cli ? cli.nome : '';
+  $('businessName').value = d.empresa || '';
+  $('docDate').value = d.emitidoEm || todayISO();
+  designCostInput.value = d.designCost || 0;
+  scanCostInput.value = d.scanCost || 0;
+  docType = d.tipo === 'final' ? 'final' : 'orcamento';
+  document.querySelectorAll('.doc-type-btn').forEach(b => b.classList.toggle('active', b.dataset.doctype === docType));
+  quoteItems = JSON.parse(JSON.stringify(d.itens || []));
+  currentDocId = d.id; editingSlug = currentSlug;
+  renderQuoteItemsList(); updateEditUI();
+  setHistStatus('Documento aberto: altera o que for preciso e gera o PDF de novo.', '');
+  $('clientName').scrollIntoView({ behavior:'smooth', block:'center' });
+}
+
+function pdfFromHistory(id){
+  const d = clientDocs.find(x => x.id === id);
+  const cli = clientIndex.find(c => c.slug === currentSlug);
+  if (!d) return;
+  buildPDF(Object.assign({}, d, { cliente: cli ? cli.nome : '' }));
+}
+
+async function deleteDoc(id){
+  const d = clientDocs.find(x => x.id === id);
+  if (!d || !confirm('Apagar este documento do histórico? Não dá para desfazer.')) return;
+  try {
+    setHistStatus('A apagar…');
+    const file = await ghUpdate('clientes/' + currentSlug + '.json', cur => {
+      if (cur) cur.docs = cur.docs.filter(x => x.id !== id);
+      return cur || { nome: currentSlug, docs: [] };
+    }, 'Documento apagado');
+    clientDocs = file.docs;
+    if (currentDocId === id){ currentDocId = null; editingSlug = ''; updateEditUI(); }
+    renderHistory();
+    setHistStatus('Documento apagado.', 'ok');
+  } catch(e){ setHistStatus('Não foi possível apagar: ' + e.message, 'err'); }
+}
+
+function newDocument(){
+  currentDocId = null; editingSlug = '';
+  quoteItems = [];
+  designCostInput.value = 0; scanCostInput.value = 0;
+  $('docDate').value = todayISO();
+  renderQuoteItemsList(); updateEditUI();
+  setHistStatus('');
+}
+
+async function testConnection(){
+  LS.set('pa_gh_repo', $('ghRepo').value.trim());
+  LS.set('pa_gh_branch', $('ghBranch').value.trim() || 'main');
+  LS.set('pa_gh_token', $('ghToken').value.trim());
+  if (!ghReady()){ setHistStatus('Preenche o repositório (dono/nome) e o token.', 'warn'); return; }
+  try {
+    setHistStatus('A testar a ligação…');
+    const c = ghCfg();
+    const res = await ghFetch('https://api.github.com/repos/' + c.repo);
+    if (!res.ok) throw new Error(ghErrMsg(res.status));
+    const j = await res.json();
+    if (!j.private){
+      setHistStatus('Atenção: ' + j.full_name + ' é um repositório PÚBLICO — os dados dos clientes ficariam visíveis a qualquer pessoa. Usa um repositório privado.', 'err');
+      return;
+    }
+    if (j.permissions && j.permissions.push === false){
+      setHistStatus('Ligado a ' + j.full_name + ', mas o token não tem permissão de escrita (Contents: Read and write).', 'err');
+      return;
+    }
+    await loadIndex();
+    setHistStatus('Ligado a ' + j.full_name + ' (privado) ✓', 'ok');
+  } catch(e){ setHistStatus('Falha na ligação: ' + e.message, 'err'); }
+}
+
+function initHistory(){
+  $('docDate').value = todayISO();
+  $('ghRepo').value = LS.get('pa_gh_repo');
+  $('ghBranch').value = LS.get('pa_gh_branch') || 'main';
+  $('ghToken').value = LS.get('pa_gh_token');
+  if (!ghReady()) $('ghSettings').open = true;
+
+  $('ghSaveBtn').addEventListener('click', testConnection);
+  $('saveOnlyBtn').addEventListener('click', onSaveOnly);
+  $('saveAsNewBtn').addEventListener('click', () => onGenerateClick(true));
+  $('newDocBtn').addEventListener('click', newDocument);
+
+  $('clientSelect').addEventListener('change', async e => {
+    const slug = e.target.value;
+    if (currentDocId){ currentDocId = null; editingSlug = ''; updateEditUI(); }   // trocar de cliente sai da edição; as peças mantêm-se
+    if (slug){
+      const c = clientIndex.find(x => x.slug === slug);
+      if (c) $('clientName').value = c.nome;
+    }
+    await loadClientDocs(slug);
+  });
+  $('clientName').addEventListener('change', () => {
+    const v = $('clientName').value.trim();
+    if (!v) return;
+    const slug = slugify(v);
+    if (slug !== currentSlug && clientIndex.some(c => c.slug === slug)){
+      $('clientSelect').value = slug;
+      loadClientDocs(slug);
+    }
+  });
+
+  updateEditUI();
+  loadIndex();
 }
 
 /* ======================= INIT ======================= */
 $('brandLogo').src = COMPANY_LOGO_WHITE;
 loadDatabase();
 initViewer();
+initHistory();
 </script>
 </body>
 </html>
