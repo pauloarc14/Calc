@@ -367,6 +367,10 @@
   input.qi-qty-in{width:52px;}
   input.qi-price-in{width:76px;}
   .qi-x{color:var(--text-faint);font-size:12px;}
+  .qi-calc{background:none;border:1px solid var(--border);color:var(--text-dim);border-radius:6px;padding:4px 8px;
+    font-size:11px;cursor:pointer;font-family:'Space Grotesk',sans-serif;transition:all .15s;}
+  .qi-calc:hover{border-color:var(--accent);color:var(--accent);}
+  .edit-banner .eb-actions{display:flex;gap:6px;flex-wrap:wrap;}
   .quote-item-row .qi-price{min-width:62px;text-align:right;}
 </style>
 </head>
@@ -663,6 +667,13 @@
           <button class="btn-ghost" id="clearPiecesBtn" type="button" style="width:100%;">Limpar peças</button>
         </div>
 
+        <div class="edit-banner" id="itemEditBar">
+          <span id="itemEditText"></span>
+          <div class="eb-actions">
+            <button class="btn-ghost" id="itemUpdateBtn" type="button">Atualizar peça com este cálculo</button>
+            <button class="btn-ghost" id="itemCancelBtn" type="button">Cancelar</button>
+          </div>
+        </div>
         <div id="quoteItemsList"></div>
 
         <button class="btn-primary" id="generatePdfBtn" type="button">Gerar PDF do orçamento</button>
@@ -728,6 +739,7 @@ let quoteItems = [];     // pieces added to the current multi-part budget
 let currentMode = 'stl'; // 'stl' | 'manual'
 let docType = 'orcamento'; // 'orcamento' | 'final'
 let components = [];     // itens de "componentes e consumíveis" (nome, preço, qtd)
+let itemEditIdx = -1;    // peça do orçamento cujo cálculo está carregado na calculadora (-1 = nenhuma)
 
 /* ======================= STL PARSING ======================= */
 function parseSTL(buffer){
@@ -1330,7 +1342,8 @@ function getCurrentAsQuoteItem(){
     weightG: lastResult.weightG,
     timeS: lastResult.timeS,
     unitPrice: lastResult.finalPrice,
-    thumb: captureThumb()
+    thumb: captureThumb(),
+    calc: snapshotCalc()
   };
 }
 
@@ -1363,6 +1376,7 @@ function renderQuoteItemsList(){
         <span class="qi-x">×</span>
         <input type="number" class="qi-in qi-price-in" data-idx="${idx}" data-f="unitPrice" value="${item.unitPrice.toFixed(2)}" min="0" step="0.01" title="Preço unitário (€)">
         <span class="qi-price" id="qiLine${idx}"></span>
+        ${item.calc ? `<button class="qi-calc" data-idx="${idx}" type="button" title="Carregar o cálculo desta peça na calculadora">Cálculo</button>` : ''}
         <button class="qi-remove" data-idx="${idx}" type="button" title="Remover">✕</button>
       </div>
     </div>`).join('');
@@ -1380,10 +1394,16 @@ function renderQuoteItemsList(){
       updateQuoteTotals();
     });
   });
+  el.querySelectorAll('.qi-calc').forEach(btn => {
+    btn.addEventListener('click', () => loadItemCalc(parseInt(btn.dataset.idx)));
+  });
   el.querySelectorAll('.qi-remove').forEach(btn => {
     btn.addEventListener('click', () => {
-      quoteItems.splice(parseInt(btn.dataset.idx), 1);
+      const i = parseInt(btn.dataset.idx);
+      quoteItems.splice(i, 1);
+      if (itemEditIdx === i) itemEditIdx = -1; else if (itemEditIdx > i) itemEditIdx--;
       renderQuoteItemsList();
+      updateItemEditBar();
     });
   });
 }
@@ -1401,6 +1421,7 @@ $('clearPiecesBtn').addEventListener('click', () => {
   if (quoteItems.length === 0) return;
   if (confirm('Remover todas as peças deste orçamento?')){
     quoteItems = [];
+    itemEditIdx = -1; updateItemEditBar();
     renderQuoteItemsList();
   }
 });
@@ -1728,11 +1749,12 @@ function renderHistory(){
   html += docs.map(d => {
     const names = (d.itens || []).map(i => i.partName).slice(0, 2).join(', ');
     const n = (d.itens || []).length;
+    const extras = (d.designCost > 0 ? ' · desenho €' + d.designCost.toFixed(2) : '') + (d.scanCost > 0 ? ' · scan €' + d.scanCost.toFixed(2) : '');
     return `<div class="hist-row">
       <div class="hist-main">
         <span class="hist-tag ${d.tipo === 'final' ? 'final' : ''}">${d.tipo === 'final' ? 'Valor a pagar' : 'Orçamento'}</span>
         <span class="hist-date">${fmtDatePT(d.emitidoEm)}</span>
-        <div class="hist-meta">${n} peça${n === 1 ? '' : 's'}${names ? ' · ' + escapeHtml(names) + (n > 2 ? '…' : '') : ''}</div>
+        <div class="hist-meta">${n} peça${n === 1 ? '' : 's'}${names ? ' · ' + escapeHtml(names) + (n > 2 ? '…' : '') : ''}${extras}</div>
       </div>
       <div class="hist-total">€${docTotal(d).toFixed(2)}</div>
       <div class="hist-actions">
@@ -1873,6 +1895,9 @@ function openDoc(id){
   quoteItems = JSON.parse(JSON.stringify(d.itens || []));
   currentDocId = d.id; editingSlug = currentSlug;
   renderQuoteItemsList(); updateEditUI();
+  itemEditIdx = -1;
+  if (quoteItems[0] && quoteItems[0].calc){ restoreCalc(quoteItems[0].calc); itemEditIdx = 0; }
+  updateItemEditBar();
   setHistStatus('Documento aberto: altera o que for preciso e gera o PDF de novo.', '');
   $('clientName').scrollIntoView({ behavior:'smooth', block:'center' });
 }
@@ -1903,6 +1928,7 @@ async function deleteDoc(id){
 function newDocument(){
   currentDocId = null; editingSlug = '';
   quoteItems = [];
+  itemEditIdx = -1; updateItemEditBar();
   designCostInput.value = 0; scanCostInput.value = 0;
   $('docDate').value = todayISO();
   renderQuoteItemsList(); updateEditUI();
@@ -1967,6 +1993,98 @@ function initHistory(){
   updateEditUI();
   loadIndex();
 }
+
+/* ======================= CÁLCULO GUARDADO POR PEÇA ======================= */
+/* Cada peça guarda uma fotografia de todos os valores da calculadora (impressora, amortização, definições,
+   custos, componentes, margem) e o resultado calculado. O ficheiro STL não é guardado: ao carregar o
+   cálculo de uma peça, ela entra em modo manual com o peso final. */
+function snapshotCalc(){
+  return {
+    modo: currentMode,
+    material: materialSel.value,
+    impressora: printerPresetSel.value,
+    pesoManual: parseFloat(manualWeightInput.value) || 0,
+    horas: parseFloat(manualHoursInput.value) || 0,
+    minutos: parseFloat(manualMinutesInput.value) || 0,
+    custoMaterialKg: parseFloat(materialCostInput.value) || 0,
+    precoImpressora: parseFloat(printerPriceInput.value) || 0,
+    vidaUtilHoras: parseFloat(printerLifetimeInput.value) || 0,
+    consumiveisHora: parseFloat(consumablesInput.value) || 0,
+    potenciaW: parseFloat(powerInput.value) || 0,
+    eletricidadeKwh: parseFloat(electricityInput.value) || 0,
+    maoObraHora: parseFloat(laborRateInput.value) || 0,
+    prepMin: parseFloat(prepMinutesInput.value) || 0,
+    posMin: parseFloat(postMinutesInput.value) || 0,
+    embalagem: parseFloat(packagingCostInput.value) || 0,
+    envio: parseFloat(shippingCostInput.value) || 0,
+    margemPct: parseFloat(marginInput.value) || 0,
+    componentes: components.map(c => ({ name: c.name, price: c.price, qty: c.qty })),
+    resultado: lastResult ? Object.assign({}, lastResult) : null
+  };
+}
+
+function restoreCalc(c){
+  if (!c) return;
+  currentMode = 'manual';
+  applyModeUI();
+  const hasOpt = (sel, v) => Array.from(sel.options).some(o => o.value === v);
+  if (c.material && hasOpt(materialSel, c.material)) materialSel.value = c.material;
+  printerPresetSel.value = (c.impressora && hasOpt(printerPresetSel, c.impressora)) ? c.impressora : 'custom';
+  $('printerPresetHint').style.display = printerPresetSel.value === 'custom' ? 'none' : 'block';
+
+  const w = (c.resultado && c.resultado.weightG != null) ? c.resultado.weightG : c.pesoManual;
+  manualWeightInput.value = Number((w || 0).toFixed(3));
+  manualHoursInput.value = c.horas || 0;
+  manualMinutesInput.value = c.minutos || 0;
+  materialCostInput.value = c.custoMaterialKg;
+  printerPriceInput.value = c.precoImpressora;
+  printerLifetimeInput.value = c.vidaUtilHoras;
+  consumablesInput.value = c.consumiveisHora;
+  powerInput.value = c.potenciaW;
+  electricityInput.value = c.eletricidadeKwh;
+  laborRateInput.value = c.maoObraHora;
+  prepMinutesInput.value = c.prepMin;
+  postMinutesInput.value = c.posMin;
+  packagingCostInput.value = c.embalagem;
+  shippingCostInput.value = c.envio;
+  marginInput.value = c.margemPct;
+  marginVal.textContent = marginInput.value + '%';
+  components = (c.componentes || []).map(x => ({ name: x.name || '', price: x.price || 0, qty: x.qty || 1 }));
+  renderComponentsRows();
+  recalc();
+}
+
+function updateItemEditBar(){
+  const bar = $('itemEditBar');
+  const it = quoteItems[itemEditIdx];
+  if (itemEditIdx < 0 || !it){ itemEditIdx = -1; bar.style.display = 'none'; return; }
+  $('itemEditText').textContent = 'Cálculo da peça «' + it.partName + '» carregado na calculadora. Altera os valores e carrega em "Atualizar peça" para guardar o novo preço.';
+  bar.style.display = 'flex';
+}
+
+function loadItemCalc(idx){
+  const it = quoteItems[idx];
+  if (!it) return;
+  if (!it.calc){ alert('Esta peça foi guardada antes de o cálculo ser registado, por isso não há valores para carregar.'); return; }
+  restoreCalc(it.calc);
+  itemEditIdx = idx;
+  updateItemEditBar();
+  $('material').scrollIntoView({ behavior:'smooth', block:'center' });
+}
+
+$('itemUpdateBtn').addEventListener('click', () => {
+  const it = quoteItems[itemEditIdx];
+  if (!it || !lastResult) return;
+  it.material = lastResult.material;
+  it.weightG = lastResult.weightG;
+  it.timeS = lastResult.timeS;
+  it.unitPrice = lastResult.finalPrice;
+  it.calc = snapshotCalc();
+  itemEditIdx = -1;
+  renderQuoteItemsList();
+  updateItemEditBar();
+});
+$('itemCancelBtn').addEventListener('click', () => { itemEditIdx = -1; updateItemEditBar(); });
 
 /* ======================= INIT ======================= */
 $('brandLogo').src = COMPANY_LOGO_WHITE;
