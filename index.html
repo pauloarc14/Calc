@@ -592,7 +592,7 @@
       <div class="divider"></div>
 
       <div class="field" style="margin-bottom:0">
-        <label>Margem de lucro <span class="val" id="marginVal">175%</span></label>
+        <label>Margem de lucro <span class="val" id="marginVal">100%</span></label>
         <input type="range" id="margin" min="0" max="500" value="30" step="5">
       </div>
     </div>
@@ -1251,15 +1251,11 @@ function recalc(){
   const kwhCost = parseFloat(electricityInput.value);
   const electricityCost = (powerW/1000) * timeH * kwhCost;
 
-  // --- separar custos que levam margem dos que passam "ao custo" ---
-  // Com margem: material, amortização da impressora, mão de obra
-  // Sem margem (só o custo, sem lucro): consumíveis (impressora + componentes), eletricidade, embalagem, envio
-  const markupBase = materialCost + machineCost + laborCost;
-  const passThroughCost = consumablesPrinterCost + componentsCost + electricityCost + packagingCost + shippingCost;
-
-  const subtotal = markupBase + passThroughCost; // custo total, sem lucro
+  // --- margem de lucro calculada sobre o custo total ---
+  // custo total = material + amortização da impressora + consumíveis + componentes + mão de obra + eletricidade + embalagem + envio
+  const subtotal = materialCost + machineCost + consumablesPrinterCost + componentsCost + laborCost + electricityCost + packagingCost + shippingCost;
   const margin = parseFloat(marginInput.value) / 100;
-  const profit = markupBase * margin; // lucro incide só sobre markupBase
+  const profit = subtotal * margin; // lucro = custo total × margem
   const finalPrice = subtotal + profit;
   // custo de desenho e de scan 3D continuam à parte — nunca entram aqui nem levam margem
 
